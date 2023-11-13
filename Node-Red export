@@ -1,0 +1,1352 @@
+[
+	{
+		"id": "5014230a.b411fc",
+		"type": "tab",
+		"label": "Logika A40 Nowa",
+		"disabled": false,
+		"info": ""
+	},
+	{
+		"id": "4c48ae29.c1e0f",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "HeaderReading",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "42768",
+		"quantity": "4",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"x": 580,
+		"y": 180,
+		"wires": [
+			[
+				"2550da90.1fd496",
+				"20b4df04.93411"
+			],
+			[]
+		]
+	},
+	{
+		"id": "2ebad76a.06e578",
+		"type": "inject",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"repeat": "10",
+		"crontab": "",
+		"once": false,
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 390,
+		"y": 220,
+		"wires": [
+			[
+				"4c48ae29.c1e0f",
+				"a2b2d753.0f0bb8"
+			]
+		]
+	},
+	{
+		"id": "2550da90.1fd496",
+		"type": "debug",
+		"z": "5014230a.b411fc",
+		"name": "Nagłówek",
+		"active": true,
+		"console": "false",
+		"complete": "payload",
+		"x": 740,
+		"y": 140,
+		"wires": []
+	},
+	{
+		"id": "a2b2d753.0f0bb8",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "DataBlockReading",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "42768",
+		"quantity": "49",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"x": 590,
+		"y": 260,
+		"wires": [
+			[
+				"85a1d805.018a28",
+				"adf6d57e.a24788"
+			],
+			[]
+		]
+	},
+	{
+		"id": "85a1d805.018a28",
+		"type": "debug",
+		"z": "5014230a.b411fc",
+		"name": "Blok danych",
+		"active": true,
+		"console": "false",
+		"complete": "payload",
+		"x": 770,
+		"y": 300,
+		"wires": []
+	},
+	{
+		"id": "a614d102.69872",
+		"type": "modbus-write",
+		"z": "5014230a.b411fc",
+		"name": "DataPointer",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"unitid": "1",
+		"dataType": "MHoldingRegisters",
+		"adr": "42752",
+		"quantity": "2",
+		"server": "6f0be603.8a1d88",
+		"x": 950,
+		"y": 180,
+		"wires": [
+			[],
+			[]
+		]
+	},
+	{
+		"id": "779a44a.91ffcbc",
+		"type": "debug",
+		"z": "5014230a.b411fc",
+		"name": "Odpowiedź",
+		"active": true,
+		"console": "false",
+		"complete": "payload",
+		"x": 950,
+		"y": 140,
+		"wires": []
+	},
+	{
+		"id": "20b4df04.93411",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "CreateSendArray",
+		"func": "var payload = [2]\nif(msg.payload[1] !== 0)\n{\n    payload = [msg.payload[0], 0]\n}\nelse\n{\n    payload = [65535, 0]\n}\nmsg.payload = payload;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"x": 770,
+		"y": 180,
+		"wires": [
+			[
+				"779a44a.91ffcbc",
+				"a614d102.69872"
+			]
+		]
+	},
+	{
+		"id": "326a1c2c.1c7ef4",
+		"type": "join",
+		"z": "5014230a.b411fc",
+		"name": "CreateFramesList",
+		"mode": "custom",
+		"build": "array",
+		"property": "payload",
+		"propertyType": "msg",
+		"key": "topic",
+		"joiner": "\\n",
+		"joinerType": "str",
+		"accumulate": false,
+		"timeout": "",
+		"count": "",
+		"x": 950,
+		"y": 260,
+		"wires": [
+			[
+				"d1fce6a1.f996e8"
+			]
+		]
+	},
+	{
+		"id": "adf6d57e.a24788",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "CreateFrame",
+		"func": "var collection = \"alpha_emt_3r1\";\nvar payload = msg.payload;\nvar values = [];\nvar output = [];\nallOutputs = 40;\n\nif(payload[1] === 0)\n{\n    msg.complete = true;\n}\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:(msg.payload[4]),   type:0, signed:0});    // EventType\noutput.push({payload:(msg.payload[5]),   type:0, signed:0});    // StartDate1\noutput.push({payload:(msg.payload[6]),   type:0, signed:0});    // StartDate2\noutput.push({payload:(msg.payload[7]),   type:0, signed:0});    // StartDate3\noutput.push({payload:(msg.payload[8]),   type:0, signed:0});    // StartDate4\noutput.push({payload:(msg.payload[9]),   type:0, signed:0});    // EndDate1\noutput.push({payload:(msg.payload[10]),   type:0, signed:0});    // EndDate2\noutput.push({payload:(msg.payload[11]),   type:0, signed:0});    // EndDate3\noutput.push({payload:(msg.payload[12]),   type:0, signed:0});    // EndDate4\noutput.push({payload:(msg.payload[13]),   type:0, signed:0});    // NetLoad\noutput.push({payload:(msg.payload[14]),   type:0, signed:0});    // LineMask\noutput.push({payload:(msg.payload[15]),   type:0, signed:0});    // StartMask\noutput.push({payload:(msg.payload[16]),   type:0, signed:0});    // EndMask\noutput.push({payload:(msg.payload[17]),   type:0, signed:0});    // TrigRatio\noutput.push({payload:(msg.payload[18]),   type:0, signed:0});    // RetTrigRatio\noutput.push({payload:((msg.payload[19] << 16) + msg.payload[20]),   type:1, signed:0});    // BitWeightVU\noutput.push({payload:((msg.payload[21] << 16) + msg.payload[22]),   type:1, signed:0});    // BitWeightI1\noutput.push({payload:((msg.payload[23] << 16) + msg.payload[24]),   type:1, signed:0});    // BitWeightI2\noutput.push({payload:((msg.payload[25] << 16) + msg.payload[26]),   type:1, signed:0});    // BitWeightI3\noutput.push({payload:((msg.payload[27] << 16) + msg.payload[28]),   type:1, signed:0});    // BitWeightIn\noutput.push({payload:(msg.payload[29]),   type:0, signed:0});    // V1ref\noutput.push({payload:(msg.payload[30]),   type:0, signed:0});    // V2ref\noutput.push({payload:(msg.payload[31]),   type:0, signed:0});    // V3ref\noutput.push({payload:(msg.payload[32]),   type:0, signed:0});    // U12ref\noutput.push({payload:(msg.payload[33]),   type:0, signed:0});    // U23ref\noutput.push({payload:(msg.payload[34]),   type:0, signed:0});    // U31ref\noutput.push({payload:(msg.payload[35]),   type:0, signed:0});    // I1\noutput.push({payload:(msg.payload[36]),   type:0, signed:0});    // I2\noutput.push({payload:(msg.payload[37]),   type:0, signed:0});    // I3\noutput.push({payload:(msg.payload[38]),   type:0, signed:0});    // In\noutput.push({payload:(msg.payload[39]),   type:0, signed:0});    // V1min_max\noutput.push({payload:(msg.payload[40]),   type:0, signed:0});    // V2min_max\noutput.push({payload:(msg.payload[41]),   type:0, signed:0});    // V3min_max\noutput.push({payload:(msg.payload[42]),   type:0, signed:0});    // U12min_max\noutput.push({payload:(msg.payload[43]),   type:0, signed:0});    // U23min_max\noutput.push({payload:(msg.payload[44]),   type:0, signed:0});    // U31min_max\noutput.push({payload:(msg.payload[45]),   type:0, signed:0});    // I1min_max\noutput.push({payload:(msg.payload[46]),   type:0, signed:0});    // I2min_max\noutput.push({payload:(msg.payload[47]),   type:0, signed:0});    // I3min_max\noutput.push({payload:(msg.payload[48]),   type:0, signed:0});    // Inmin_max\n\nfor(var i=0; i < allOutputs; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload > 32767)\n        {\n            output[i].payload = output[i].payload - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload < 0)\n        {\n            output[i].payload = output[i].payload + 4294967295 + 1;\n        }\n    }\n}\n\nvalues.push('Collection:'+ \"'\" + collection + \"'\");\nvalues.push('EventType:'+ output[0].payload);\nvalues.push('StartDate1:'+ output[1].payload);\nvalues.push('StartDate2:'+ output[2].payload);\nvalues.push('StartDate3:'+ output[3].payload);\nvalues.push('StartDate4:'+ output[4].payload);\nvalues.push('EndDate1:'+ output[5].payload);\nvalues.push('EndDate2:'+ output[6].payload);\nvalues.push('EndDate3:'+ output[7].payload);\nvalues.push('EndDate4:'+ output[8].payload);\nvalues.push('Net_Load:'+ output[9].payload);\nvalues.push('LineMask:'+ output[10].payload);\nvalues.push('StartMask:'+ output[11].payload);\nvalues.push('EndMask:'+ output[12].payload);\nvalues.push('TrigRatio:'+ output[13].payload);\nvalues.push('RetTrigRatio:'+ output[14].payload);\nvalues.push('BitWeightVU:'+ output[15].payload);\nvalues.push('BitWeightI1:'+ output[16].payload);\nvalues.push('BitWeightI2:'+ output[17].payload);\nvalues.push('BitWeightI3:'+ output[18].payload);\nvalues.push('BitWeightIn:'+ output[19].payload);\nvalues.push('V1ref:'+ output[20].payload);\nvalues.push('V2ref:'+ output[21].payload);\nvalues.push('V3ref:'+ output[22].payload);\nvalues.push('U12ref:'+ output[23].payload);\nvalues.push('U23ref:'+ output[24].payload);\nvalues.push('U31ref:'+ output[25].payload);\nvalues.push('I1:'+ output[26].payload);\nvalues.push('I2:'+ output[27].payload);\nvalues.push('I3:'+ output[28].payload);\nvalues.push('In:'+ output[29].payload);\nvalues.push('V1min_max:'+ output[30].payload);\nvalues.push('V2min_max:'+ output[31].payload);\nvalues.push('V3min_max:'+ output[32].payload);\nvalues.push('U12min_max:'+ output[33].payload);\nvalues.push('U23min_max:'+ output[34].payload);\nvalues.push('U31min_max:'+ output[35].payload);\nvalues.push('I1min_max:'+ output[36].payload);\nvalues.push('I2min_max:'+ output[37].payload);\nvalues.push('I3min_max:'+ output[38].payload);\nvalues.push('Inmin_max:'+ output[39].payload);\n\nvalues = \"{\" + values.join(',') + \"}\";\nmsg.payload = values;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"x": 770,
+		"y": 260,
+		"wires": [
+			[
+				"326a1c2c.1c7ef4"
+			]
+		]
+	},
+	{
+		"id": "49391bae.020114",
+		"type": "debug",
+		"z": "5014230a.b411fc",
+		"name": "anomalie",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"complete": "payload",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 1320,
+		"y": 320,
+		"wires": []
+	},
+	{
+		"id": "c820745a.177178",
+		"type": "http request",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"method": "POST",
+		"ret": "txt",
+		"url": "https://poe-alpha-insight.azurewebsites.net/api/EventsToTimescale?code=JcX8Gsw6S3J/NzpimcMMYKqW7pfNajI49IBej94WNWWW3nxdVlcVfg==",
+		"tls": "",
+		"x": 1340,
+		"y": 260,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "d1fce6a1.f996e8",
+		"type": "json",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"pretty": false,
+		"x": 1110,
+		"y": 260,
+		"wires": [
+			[
+				"49391bae.020114",
+				"c820745a.177178"
+			]
+		]
+	},
+	{
+		"id": "ac1d4b6b.d78d48",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "Odczyt anomalii",
+		"info": "",
+		"x": 380,
+		"y": 120,
+		"wires": []
+	},
+	{
+		"id": "227522c0.06ee2e",
+		"type": "inject",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"repeat": "5",
+		"crontab": "",
+		"once": false,
+		"onceDelay": "",
+		"topic": "",
+		"payload": "",
+		"payloadType": "date",
+		"x": 70,
+		"y": 1120,
+		"wires": [
+			[
+				"b6b199be.136328",
+				"44de092f.152098",
+				"2051cfdf.40aa9",
+				"eff17bb7.aef098",
+				"dc3ad24f.6bdc1",
+				"798dc8cc.8d55b8",
+				"b3592a25.578ad8",
+				"98f198ad.032d28",
+				"e35f6325.dc2ea",
+				"51db8dbe.a8f1f4"
+			]
+		]
+	},
+	{
+		"id": "a6105451.4ae518",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Imax",
+		"func": "var allRegisters = 152;\nvar registersInNode = 24;\nvar startIndex = 0;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'F_max', value: ((msg.payload[0] << 16) + msg.payload[1])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U1_max', value: ((msg.payload[4] << 16) + msg.payload[5])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U2_max', value: ((msg.payload[8] << 16) + msg.payload[9])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U3_max', value: ((msg.payload[12] << 16) + msg.payload[13])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Un_max', value: ((msg.payload[16] << 16) + msg.payload[17])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V12_max', value: ((msg.payload[20] << 16) + msg.payload[21])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V23_max', value: ((msg.payload[24] << 16) + msg.payload[25])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V31_max', value: ((msg.payload[28] << 16) + msg.payload[29])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'I1_max', value: ((msg.payload[32] << 16) + msg.payload[33])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I1max\noutput.push({payload:{name: 'I2_max', value: ((msg.payload[36] << 16) + msg.payload[37])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I2max\noutput.push({payload:{name: 'I3_max', value: ((msg.payload[40] << 16) + msg.payload[41])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I3max\noutput.push({payload:{name: 'In_max', value: ((msg.payload[44] << 16) + msg.payload[45])}, type:1, signed:0, parts: {id:0,index:0,count:0}});  //Inmax\n\noutput.push({payload:{name: 'PT_max', value: ((msg.payload[48] << 16) + msg.payload[49])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'QT_max', value: ((msg.payload[52] << 16) + msg.payload[53])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'ST_max', value: ((msg.payload[56] << 16) + msg.payload[57])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'P1_max', value: ((msg.payload[64] << 16) + msg.payload[65])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'P2_max', value: ((msg.payload[68] << 16) + msg.payload[69])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'P3_max', value: ((msg.payload[72] << 16) + msg.payload[73])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'Q1_max', value: ((msg.payload[76] << 16) + msg.payload[77])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Q2_max', value: ((msg.payload[80] << 16) + msg.payload[80])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Q3_max', value: ((msg.payload[84] << 16) + msg.payload[85])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'S1_max', value: ((msg.payload[88] << 16) + msg.payload[89])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'S2_max', value: ((msg.payload[92] << 16) + msg.payload[93])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'S3_max', value: ((msg.payload[96] << 16) + msg.payload[97])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\n// Skalowanie\noutput[1].payload.value = output[1].payload.value / 100;  // U1\noutput[2].payload.value = output[2].payload.value / 100;  // U2\noutput[3].payload.value = output[3].payload.value / 100;  // U3\noutput[4].payload.value = output[4].payload.value / 100;  // Un\noutput[5].payload.value = output[5].payload.value / 100;  // V12\noutput[6].payload.value = output[6].payload.value / 100;  // V23\noutput[7].payload.value = output[7].payload.value / 100;  // V31\n\nreturn output;",
+		"outputs": "24",
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 810,
+		"y": 680,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "a8c90859.afb048",
+		"type": "join",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"mode": "auto",
+		"build": "string",
+		"property": "payload",
+		"propertyType": "msg",
+		"key": "topic",
+		"joiner": "\\n",
+		"joinerType": "str",
+		"accumulate": false,
+		"timeout": "",
+		"count": "",
+		"x": 1210,
+		"y": 1120,
+		"wires": [
+			[
+				"9bd73acb.94aeb8"
+			]
+		]
+	},
+	{
+		"id": "b6b199be.136328",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "Modbus Getter",
+		"showStatusActivities": false,
+		"showErrors": true,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "18817",
+		"quantity": "100",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 860,
+		"wires": [
+			[
+				"a6105451.4ae518"
+			],
+			[]
+		]
+	},
+	{
+		"id": "65430627.78d368",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Imin",
+		"func": "var allRegisters = 152;\nvar registersInNode = 24;\nvar startIndex = 24;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'F_min', value: ((msg.payload[0] << 16) + msg.payload[1])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U1_min', value: ((msg.payload[4] << 16) + msg.payload[5])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U2_min', value: ((msg.payload[8] << 16) + msg.payload[9])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'U3_min', value: ((msg.payload[12] << 16) + msg.payload[13])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Un_min', value: ((msg.payload[16] << 16) + msg.payload[17])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V12_min', value: ((msg.payload[20] << 16) + msg.payload[21])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V23_min', value: ((msg.payload[24] << 16) + msg.payload[25])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'V31_min', value: ((msg.payload[28] << 16) + msg.payload[29])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'I1_min', value: ((msg.payload[32] << 16) + msg.payload[33])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I1min\noutput.push({payload:{name: 'I2_min', value: ((msg.payload[36] << 16) + msg.payload[37])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I2min\noutput.push({payload:{name: 'I3_min', value: ((msg.payload[40] << 16) + msg.payload[41])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //I3min\noutput.push({payload:{name: 'In_min', value: ((msg.payload[44] << 16) + msg.payload[45])}, type:1, signed:0, parts: {id:0,index:0,count:0}});  //Inmin\n\noutput.push({payload:{name: 'PT_min', value: ((msg.payload[48] << 16) + msg.payload[49])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'QT_min', value: ((msg.payload[52] << 16) + msg.payload[53])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'ST_min', value: ((msg.payload[56] << 16) + msg.payload[57])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'P1_min', value: ((msg.payload[64] << 16) + msg.payload[65])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'P2_min', value: ((msg.payload[68] << 16) + msg.payload[69])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'P3_min', value: ((msg.payload[72] << 16) + msg.payload[73])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'Q1_min', value: ((msg.payload[76] << 16) + msg.payload[77])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Q2_min', value: ((msg.payload[80] << 16) + msg.payload[81])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Q3_min', value: ((msg.payload[84] << 16) + msg.payload[85])},   type:1, signed:1, parts: {id:0,index:0,count:0}});\n\noutput.push({payload:{name: 'S1_min', value: ((msg.payload[88] << 16) + msg.payload[89])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'S2_min', value: ((msg.payload[92] << 16) + msg.payload[93])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'S3_min', value: ((msg.payload[96] << 16) + msg.payload[97])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\n// Skalowanie\noutput[1].payload.value = output[1].payload.value / 100;  // U1\noutput[2].payload.value = output[2].payload.value / 100;  // U2\noutput[3].payload.value = output[3].payload.value / 100;  // U3\noutput[4].payload.value = output[4].payload.value / 100;  // U3\noutput[5].payload.value = output[5].payload.value / 100;  // V12\noutput[6].payload.value = output[6].payload.value / 100;  // V23\noutput[7].payload.value = output[7].payload.value / 100;  // V31\n\nreturn output;",
+		"outputs": "24",
+		"noerr": 0,
+		"x": 810,
+		"y": 1080,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "44de092f.152098",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "19073",
+		"quantity": "100",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 920,
+		"wires": [
+			[
+				"65430627.78d368"
+			],
+			[]
+		]
+	},
+	{
+		"id": "8bbfdf54.b9c12",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "COS/TG/THD",
+		"func": "var allRegisters = 152;\nvar registersInNode = 13;\nvar startIndex = 80;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'A40_COS_L1', value:(msg.payload[0])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_COS_L1\noutput.push({payload:{name: 'A40_COS_L2', value:(msg.payload[1])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_COS_L2\noutput.push({payload:{name: 'A40_COS_L3', value:(msg.payload[2])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_COS_L3\noutput.push({payload:{name: 'A40_TG_L1', value:(msg.payload[3])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_TG_L1\noutput.push({payload:{name: 'A40_TG_L2', value:(msg.payload[4])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_TG_L2\noutput.push({payload:{name: 'A40_TG_L3', value:(msg.payload[5])},   type:0, signed:1, parts: {id:0,index:0,count:0}});    //  A40_TG_L3\noutput.push({payload:{name: 'THD_U1', value:(msg.payload[6])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_U1\noutput.push({payload:{name: 'THD_U2', value:(msg.payload[7])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_U2\noutput.push({payload:{name: 'THD_U3', value:(msg.payload[8])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_U3\noutput.push({payload:{name: 'THD_I1', value:(msg.payload[12])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_I1\noutput.push({payload:{name: 'THD_I2', value:(msg.payload[13])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_I2\noutput.push({payload:{name: 'THD_I3', value:(msg.payload[14])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_I3\noutput.push({payload:{name: 'THD_In', value:(msg.payload[15])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  THD_In\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\n// Skalowanie\noutput[0].payload.value = output[0].payload.value / 1000; // COS1\noutput[1].payload.value = output[1].payload.value / 1000; // COS2\noutput[2].payload.value = output[2].payload.value / 1000; // COS3\noutput[3].payload.value = output[3].payload.value / 1000; // TG1\noutput[4].payload.value = output[4].payload.value / 1000; // TG2\noutput[5].payload.value = output[5].payload.value / 1000; // TG3\noutput[6].payload.value = output[6].payload.value / 100; // THD_U1\noutput[7].payload.value = output[7].payload.value / 100; // THD_U2\noutput[8].payload.value = output[8].payload.value / 100; // THD_U2\noutput[9].payload.value = output[9].payload.value / 100; // THD_I1\noutput[10].payload.value = output[10].payload.value / 100; // THD_I2 \noutput[11].payload.value = output[11].payload.value / 100; // THD_I3\noutput[12].payload.value = output[12].payload.value / 100; // THD_In\n\nreturn output;",
+		"outputs": "13",
+		"noerr": 0,
+		"x": 840,
+		"y": 1920,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "2051cfdf.40aa9",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "13830",
+		"quantity": "1",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 980,
+		"wires": [
+			[
+				"146fdf7f.eec431"
+			],
+			[]
+		]
+	},
+	{
+		"id": "146fdf7f.eec431",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Inom",
+		"func": "var allRegisters = 152;\nvar registersInNode = 1;\nvar startIndex = 48;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'Inom', value:(msg.payload[0])},   type:1, signed:0, parts: {id:0,index:0,count:0}});  //Inom\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\nreturn output;",
+		"outputs": "1",
+		"noerr": 0,
+		"x": 810,
+		"y": 1320,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "eff17bb7.aef098",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "18745",
+		"quantity": "16",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 1100,
+		"wires": [
+			[
+				"8bbfdf54.b9c12"
+			],
+			[]
+		]
+	},
+	{
+		"id": "dc3ad24f.6bdc1",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "19843",
+		"quantity": "2",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"x": 440,
+		"y": 1160,
+		"wires": [
+			[
+				"7de6da9c.dcee84"
+			],
+			[]
+		]
+	},
+	{
+		"id": "7de6da9c.dcee84",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Ea+",
+		"func": "var allRegisters = 152;\nvar registersInNode = 1;\nvar startIndex = 93;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'Ea_PLUS', value:((msg.payload[0] << 16) + msg.payload[1])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // Ea_PLUS \n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\nreturn output;",
+		"outputs": "1",
+		"noerr": 0,
+		"x": 810,
+		"y": 2040,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "b3592a25.578ad8",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "37504",
+		"quantity": "42",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 1280,
+		"wires": [
+			[
+				"d377f7f1.eb2918"
+			],
+			[]
+		]
+	},
+	{
+		"id": "98f198ad.032d28",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "19713",
+		"quantity": "56",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"x": 440,
+		"y": 1340,
+		"wires": [
+			[
+				"650b49a1.9a2a38"
+			],
+			[]
+		]
+	},
+	{
+		"id": "d377f7f1.eb2918",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Har V",
+		"func": "var allRegisters = 152;\nvar registersInNode = 21;\nvar startIndex = 98;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'U_Har3_L1', value:(msg.payload[0])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har3_L1\noutput.push({payload:{name: 'U_Har3_L2', value:(msg.payload[1])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har3_L2\noutput.push({payload:{name: 'U_Har3_L3', value:(msg.payload[2])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har3_L3\noutput.push({payload:{name: 'U_Har5_L1', value:(msg.payload[3])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har5_L1\noutput.push({payload:{name: 'U_Har5_L2', value:(msg.payload[4])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har5_L2\noutput.push({payload:{name: 'U_Har5_L3', value:(msg.payload[5])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har5_L3\noutput.push({payload:{name: 'U_Har7_L1', value:(msg.payload[6])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har7_L1\noutput.push({payload:{name: 'U_Har7_L2', value:(msg.payload[7])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har7_L2\noutput.push({payload:{name: 'U_Har7_L3', value:(msg.payload[8])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har7_L3\noutput.push({payload:{name: 'U_Har9_L1', value:(msg.payload[9])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har9_L1\noutput.push({payload:{name: 'U_Har9_L2', value:(msg.payload[10])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har9_L2\noutput.push({payload:{name: 'U_Har9_L3', value:(msg.payload[11])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har9_L3\noutput.push({payload:{name: 'U_Har11_L1', value:(msg.payload[12])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har11_L1\noutput.push({payload:{name: 'U_Har11_L2', value:(msg.payload[13])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har11_L2\noutput.push({payload:{name: 'U_Har11_L3', value:(msg.payload[14])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har11_L3\noutput.push({payload:{name: 'U_Har13_L1', value:(msg.payload[15])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har13_L1\noutput.push({payload:{name: 'U_Har13_L2', value:(msg.payload[16])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har13_L2\noutput.push({payload:{name: 'U_Har13_L3', value:(msg.payload[17])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har13_L3\noutput.push({payload:{name: 'U_Har15_L1', value:(msg.payload[18])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har15_L1\noutput.push({payload:{name: 'U_Har15_L2', value:(msg.payload[19])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har15_L2\noutput.push({payload:{name: 'U_Har15_L3', value:(msg.payload[20])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  U_Har15_L3\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\n// Skalowanie - jest w pętli\n\nreturn output;",
+		"outputs": "21",
+		"noerr": 0,
+		"x": 810,
+		"y": 2300,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "ccf9410f.311e",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Er lag/lead",
+		"func": "var allRegisters = 152;\nvar registersInNode = 4;\nvar startIndex = 94;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'Er_lag_dec', value:((msg.payload[0] << 16) + msg.payload[1])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // Er_lag_dec\noutput.push({payload:{name: 'Er_lag_res', value:(msg.payload[2])},                            type:0, signed:0, parts: {id:0,index:0,count:0}});    // Er_lag_res \noutput.push({payload:{name: 'Er_lead_dec', value:((msg.payload[6] << 16) + msg.payload[7])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // Ea_lead_dec \noutput.push({payload:{name: 'Er_lead_res', value:(msg.payload[8])},                            type:0, signed:0, parts: {id:0,index:0,count:0}});    // Ea_lead_res \n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\nreturn output;",
+		"outputs": "4",
+		"noerr": 0,
+		"x": 830,
+		"y": 2100,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "798dc8cc.8d55b8",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "19858",
+		"quantity": "9",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 1220,
+		"wires": [
+			[
+				"ccf9410f.311e"
+			],
+			[]
+		]
+	},
+	{
+		"id": "650b49a1.9a2a38",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "Har I",
+		"func": "var allRegisters = 152;\nvar registersInNode = 28;\nvar startIndex = 119;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'I_Har3_L1', value:(msg.payload[0])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har3_L1\noutput.push({payload:{name: 'I_Har3_L2', value:(msg.payload[1])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har3_L2\noutput.push({payload:{name: 'I_Har3_L3', value:(msg.payload[2])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har3_L3\noutput.push({payload:{name: 'In_Har3', value:(msg.payload[3])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har3\noutput.push({payload:{name: 'I_Har5_L1', value:(msg.payload[4])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har5_L1\noutput.push({payload:{name: 'I_Har5_L2', value:(msg.payload[5])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har5_L2\noutput.push({payload:{name: 'I_Har5_L3', value:(msg.payload[6])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har5_L3\noutput.push({payload:{name: 'In_Har5', value:(msg.payload[7])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har5\noutput.push({payload:{name: 'I_Har7_L1', value:(msg.payload[8])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har7_L1\noutput.push({payload:{name: 'I_Har7_L2', value:(msg.payload[9])},    type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har7_L2\noutput.push({payload:{name: 'I_Har7_L3', value:(msg.payload[10])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har7_L3\noutput.push({payload:{name: 'In_Har7', value:(msg.payload[11])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har7\noutput.push({payload:{name: 'I_Har9_L1', value:(msg.payload[12])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har9_L1\noutput.push({payload:{name: 'I_Har9_L2', value:(msg.payload[13])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har9_L2\noutput.push({payload:{name: 'I_Har9_L3', value:(msg.payload[14])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har9_L3\noutput.push({payload:{name: 'In_Har9', value:(msg.payload[15])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har9\noutput.push({payload:{name: 'I_Har11_L1', value:(msg.payload[16])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har11_L1\noutput.push({payload:{name: 'I_Har11_L2', value:(msg.payload[17])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har11_L2\noutput.push({payload:{name: 'I_Har11_L3', value:(msg.payload[18])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har11_L3\noutput.push({payload:{name: 'In_Har11', value:(msg.payload[19])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har11\noutput.push({payload:{name: 'I_Har13_L1', value:(msg.payload[20])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har13_L1\noutput.push({payload:{name: 'I_Har13_L2', value:(msg.payload[21])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har13_L2\noutput.push({payload:{name: 'I_Har13_L3', value:(msg.payload[22])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har13_L3\noutput.push({payload:{name: 'In_Har13', value:(msg.payload[23])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har13\noutput.push({payload:{name: 'I_Har15_L1', value:(msg.payload[24])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har15_L1\noutput.push({payload:{name: 'I_Har15_L2', value:(msg.payload[25])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har15_L2\noutput.push({payload:{name: 'I_Har15_L3', value:(msg.payload[26])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  I_Har15_L3\noutput.push({payload:{name: 'In_Har15', value:(msg.payload[27])},   type:0, signed:0, parts: {id:0,index:0,count:0}});    //  In_Har15\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\nreturn output;",
+		"outputs": "28",
+		"noerr": 0,
+		"x": 810,
+		"y": 2680,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "7a3afec0.92a72",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "19073 - 19172",
+		"info": "",
+		"x": 230,
+		"y": 920,
+		"wires": []
+	},
+	{
+		"id": "6234ab02.0afef4",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "13830",
+		"info": "",
+		"x": 210,
+		"y": 980,
+		"wires": []
+	},
+	{
+		"id": "ffcbd3cf.8b485",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "18745 - 18760",
+		"info": "",
+		"x": 230,
+		"y": 1100,
+		"wires": []
+	},
+	{
+		"id": "96a41c17.1fb01",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "19843 - 19844",
+		"info": "",
+		"x": 230,
+		"y": 1160,
+		"wires": []
+	},
+	{
+		"id": "64354a1b.512d54",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "19858 - 19866",
+		"info": "",
+		"x": 230,
+		"y": 1220,
+		"wires": []
+	},
+	{
+		"id": "ea3d4a31.6e8d88",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "37504 - 37545",
+		"info": "",
+		"x": 230,
+		"y": 1280,
+		"wires": []
+	},
+	{
+		"id": "111dbf3f.1ad291",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "19713 - 19768",
+		"info": "",
+		"x": 230,
+		"y": 1340,
+		"wires": []
+	},
+	{
+		"id": "1df95309.72cefd",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "U/I/P/Q",
+		"func": "var allRegisters = 152;\nvar registersInNode = 31;\nvar startIndex = 49;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'U1', value:((msg.payload[0] << 16) + msg.payload[1])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // U1 \noutput.push({payload:{name: 'U2', value:((msg.payload[2] << 16) + msg.payload[3])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // U2 \noutput.push({payload:{name: 'U3', value:((msg.payload[4] << 16) + msg.payload[5])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // U3 \noutput.push({payload:{name: 'Un', value:((msg.payload[6] << 16) + msg.payload[7])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // Un \n\noutput.push({payload:{name: 'V1', value:((msg.payload[8] << 16) + msg.payload[9])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // V1 \noutput.push({payload:{name: 'V2', value:((msg.payload[10] << 16) + msg.payload[11])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // V2 \noutput.push({payload:{name: 'V3', value:((msg.payload[12] << 16) + msg.payload[13])},   type:1, signed:0, parts: {id:0,index:0,count:0}});    // V3 \n\noutput.push({payload:{name: 'I1', value:((msg.payload[14] << 16) + msg.payload[15])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // I1 \noutput.push({payload:{name: 'I2', value:((msg.payload[16] << 16) + msg.payload[17])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // I2 \noutput.push({payload:{name: 'I3', value:((msg.payload[18] << 16) + msg.payload[19])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // I3 \noutput.push({payload:{name: 'In', value:((msg.payload[20] << 16) + msg.payload[21])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // In \noutput.push({payload:{name: 'Inba', value:(msg.payload[22])},                           type:0, signed:0, parts: {id:0,index:0,count:0}});    // Inba \noutput.push({payload:{name: 'Idir', value:((msg.payload[23] << 16) + msg.payload[24])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // Idir \noutput.push({payload:{name: 'Iinv', value:((msg.payload[25] << 16) + msg.payload[26])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // Iinv \noutput.push({payload:{name: 'Ihom', value:((msg.payload[27] << 16) + msg.payload[28])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // Ihom \noutput.push({payload:{name: 'Inb', value:(msg.payload[29])},                           type:0, signed:0, parts: {id:0,index:0,count:0}});    // Inb \noutput.push({payload:{name: 'PT', value:((msg.payload[32] << 16) + msg.payload[33])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // PT 1\noutput.push({payload:{name: 'QT', value:((msg.payload[34] << 16) + msg.payload[35])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // QT 1\noutput.push({payload:{name: 'QT_lag', value:((msg.payload[36] << 16) + msg.payload[37])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // QT_lag \noutput.push({payload:{name: 'QT_lead', value:((msg.payload[38] << 16) + msg.payload[39])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // QT_lead \noutput.push({payload:{name: 'ST', value:((msg.payload[40] << 16) + msg.payload[41])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // ST 1\noutput.push({payload:{name: 'PF', value:(msg.payload[42])},                           type:0, signed:1, parts: {id:0,index:0,count:0}});    // PF \noutput.push({payload:{name: 'P1', value:((msg.payload[44] << 16) + msg.payload[45])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // P1 \noutput.push({payload:{name: 'P2', value:((msg.payload[46] << 16) + msg.payload[47])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // P2 \noutput.push({payload:{name: 'P3', value:((msg.payload[48] << 16) + msg.payload[49])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // P3 \noutput.push({payload:{name: 'Q1', value:((msg.payload[50] << 16) + msg.payload[51])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // Q1 \noutput.push({payload:{name: 'Q2', value:((msg.payload[52] << 16) + msg.payload[53])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // Q2 \noutput.push({payload:{name: 'Q3', value:((msg.payload[54] << 16) + msg.payload[55])}, type:1, signed:1, parts: {id:0,index:0,count:0}});    // Q3 \noutput.push({payload:{name: 'S1', value:((msg.payload[68] << 16) + msg.payload[69])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // S1 \noutput.push({payload:{name: 'S2', value:((msg.payload[70] << 16) + msg.payload[71])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // S2 \noutput.push({payload:{name: 'S3', value:((msg.payload[72] << 16) + msg.payload[73])}, type:1, signed:0, parts: {id:0,index:0,count:0}});    // S3 \n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\n// Skalowanie\noutput[0].payload.value = output[0].payload.value / 100; // U1\noutput[1].payload.value = output[1].payload.value / 100; // U2\noutput[2].payload.value = output[2].payload.value / 100; // U3\noutput[3].payload.value = output[3].payload.value / 100; // Un\noutput[4].payload.value = output[4].payload.value / 100; // V1\noutput[5].payload.value = output[5].payload.value / 100; // V2\noutput[6].payload.value = output[6].payload.value / 100; // V3\n    \nreturn output;",
+		"outputs": "31",
+		"noerr": 0,
+		"x": 820,
+		"y": 1580,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "6c79cff2.ebab9",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "18444 - 18517",
+		"info": "",
+		"x": 230,
+		"y": 1040,
+		"wires": []
+	},
+	{
+		"id": "e35f6325.dc2ea",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": true,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "18444",
+		"quantity": "74",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"emptyMsgOnFail": false,
+		"keepMsgProperties": false,
+		"x": 440,
+		"y": 1040,
+		"wires": [
+			[
+				"1df95309.72cefd"
+			],
+			[]
+		]
+	},
+	{
+		"id": "51db8dbe.a8f1f4",
+		"type": "modbus-getter",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"showStatusActivities": false,
+		"showErrors": false,
+		"logIOActivities": false,
+		"unitid": "1",
+		"dataType": "HoldingRegister",
+		"adr": "36864",
+		"quantity": "37",
+		"server": "6f0be603.8a1d88",
+		"useIOFile": false,
+		"ioFile": "",
+		"useIOForPayload": false,
+		"x": 440,
+		"y": 1400,
+		"wires": [
+			[
+				"78873d12.79b1f4"
+			],
+			[]
+		]
+	},
+	{
+		"id": "a1a5d426.a121f8",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "36864 - 36900",
+		"info": "",
+		"x": 230,
+		"y": 1400,
+		"wires": []
+	},
+	{
+		"id": "78873d12.79b1f4",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "F/Vquality",
+		"func": "var allRegisters = 152;\nvar registersInNode = 5;\nvar startIndex = 147;\nvar output = [];\n\n// Odczyt danych z rejestrów - type: 0-16bit, 1-32bit - signed: 0-unsigned, 1-signed\noutput.push({payload:{name: 'F', value:((msg.payload[7] << 16) + msg.payload[8])},   type:1, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Unb', value:(msg.payload[29])},                         type:0, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Unba', value:(msg.payload[35])},                        type:0, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Vnb', value:(msg.payload[34])},                         type:0, signed:0, parts: {id:0,index:0,count:0}});\noutput.push({payload:{name: 'Vnba', value:(msg.payload[36])},                        type:0, signed:0, parts: {id:0,index:0,count:0}});\n\nfor(var i=0; i < registersInNode; i++)\n{\n    // Konwersja w przypadku liczby ze znakiem 16bit\n    if(output[i].signed === 1 && output[i].type === 0)\n    {\n        if(output[i].payload.value > 32767)\n        {\n            output[i].payload.value = output[i].payload.value - 65535 - 1;   \n        }\n    }\n    // Konwersja w przypadku liczby bez znaku 32bit\n    else if(output[i].signed === 0 && output[i].type === 1)\n    {\n\n        if(output[i].payload.value < 0)\n        {\n            output[i].payload.value = output[i].payload.value + 4294967295 + 1;\n        }\n    }\n    \n    // Uzupełnienie obiektu parts\n    output[i].parts = {id:1,index:i+startIndex,count:allRegisters};\n}\n\nreturn output;",
+		"outputs": "13",
+		"noerr": 0,
+		"x": 820,
+		"y": 3000,
+		"wires": [
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			],
+			[
+				"a8c90859.afb048"
+			]
+		]
+	},
+	{
+		"id": "74a5735b.9b484c",
+		"type": "comment",
+		"z": "5014230a.b411fc",
+		"name": "18817 - 18916",
+		"info": "",
+		"x": 230,
+		"y": 860,
+		"wires": []
+	},
+	{
+		"id": "9bd73acb.94aeb8",
+		"type": "function",
+		"z": "5014230a.b411fc",
+		"name": "CreateVariableString",
+		"func": "Date.prototype.customFormat = function(formatString){\n  var YYYY,YY,MMMM,MMM,MM,M,DDDD,DDD,DD,D,hhhh,hhh,hh,h,mm,m,ss,s,ampm,AMPM,dMod,th;\n  YY = ((YYYY=this.getFullYear())+\"\").slice(-2);\n  MM = (M=this.getMonth()+1)<10?('0'+M):M;\n  DD = (D=this.getDate())<10?('0'+D):D;\n  formatString = formatString.replace(\"#YYYY#\",YYYY).replace(\"#YY#\",YY).replace(\"#MM#\",MM).replace(\"#DD#\",DD);\n  //hh = hhh=this.getHours();\n  hh=(h=this.getHours())<10?('0'+h):h;\n  mm=(m=this.getMinutes())<10?('0'+m):m;\n  ss=(s=this.getSeconds())<10?('0'+s):s;\n  return formatString.replace(\"#hh#\",hh).replace(\"#mm#\",mm).replace(\"#ss#\",ss);\n};\n\nvar date = new Date().getTime();\ndate = new Date(date)\nconst timezoneGap= (date.getTimezoneOffset()/60)*(-1);\n\nvar values = [];\n\n// Jeżeli jakikolwiek z prądów przyjmuje wartość max dla rejestru to znaczy, że wartość wykracza poza skalę pomiarową\n// (jest za mała). W takim przypadku w przybliżeniu przyjmujemy, że jest równa zero.\n// Wszytkie pochodne wartości należy również wyzerować aby nie wprowadzały w błąd.\nvar isInvalid = false;\n/*\nvar isPowerTotalInvalid = false;\n//\nif(msg.payload[26] < 0)\n{\n    msg.payload[26] = 0;\n    isPowerTotalInvalid = true;\n}\nif(msg.payload[27] < 0)\n{\n    msg.payload[27] = 0;\n    isPowerTotalInvalid = true;\n}\nif(msg.payload[28] < 0)\n{\n    msg.payload[28] = 0;\n    isPowerTotalInvalid = true;\n}\nif(msg.payload[21] < 0 || isPowerTotalInvalid === true)\n{\n    msg.payload[21] = msg.payload[26] + msg.payload[27] + msg.payload[28]; // PT = P1 + P2 + P3\n}\n//\nif(msg.payload[26] == 2147483647)\n{\n    msg.payload[26] = 0; // P1\n    msg.payload[29] = 0; // Q1\n    msg.payload[32] = 0; // A40_COS_L1\n    msg.payload[35] = 0; // A40_TG_L1\n}\nif(msg.payload[27] == 2147483647)\n{\n    msg.payload[27] = 0; // P2\n    msg.payload[30] = 0; // Q2\n    msg.payload[33] = 0; // A40_COS_L2\n    msg.payload[36] = 0; // A40_TG_L2\n}\nif(msg.payload[28] == 2147483647)\n{\n    msg.payload[28] = 0; // P3\n    msg.payload[31] = 0; // Q3\n    msg.payload[34] = 0; // A40_COS_L3\n    msg.payload[37] = 0; // A40_TG_L3\n}*/\n// \nif(msg.payload.find(o => o.name == 'I1').value == 4294967295)\n{\n    msg.payload.find(o => o.name == 'I1').value = 0;\n    msg.payload.find(o => o.name == 'P1').value = 0;\n    msg.payload.find(o => o.name == 'Q1').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L1').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L1').value = 0;\n    isInvalid = true;\n}\nif(msg.payload.find(o => o.name == 'I2').value == 4294967295)\n{\n    msg.payload.find(o => o.name == 'I2').value = 0;\n    msg.payload.find(o => o.name == 'P2').value = 0;\n    msg.payload.find(o => o.name == 'Q2').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L2').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L2').value = 0;\n    isInvalid = true;\n}\nif(msg.payload.find(o => o.name == 'I3').value == 4294967295)\n{\n    msg.payload.find(o => o.name == 'I3').value = 0;\n    msg.payload.find(o => o.name == 'P3').value = 0;\n    msg.payload.find(o => o.name == 'Q3').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L3').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L3').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P1').value > 2147483647)\n{\n    msg.payload.find(o => o.name == 'P1').value = 0;\n    msg.payload.find(o => o.name == 'Q1').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L1').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L1').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P2').value > 2147483647)\n{\n    msg.payload.find(o => o.name == 'P2').value = 0;\n    msg.payload.find(o => o.name == 'Q2').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L2').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L2').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P3').value > 2147483647)\n{\n    msg.payload.find(o => o.name == 'P3').value = 0;\n    msg.payload.find(o => o.name == 'Q3').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L3').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L3').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P1').value > 10000000)\n{\n    msg.payload.find(o => o.name == 'P1').value = 0;\n    msg.payload.find(o => o.name == 'Q1').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L1').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L1').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P2').value > 10000000)\n{\n    msg.payload.find(o => o.name == 'P2').value = 0;\n    msg.payload.find(o => o.name == 'Q2').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L2').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L2').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'P3').value > 10000000)\n{\n    msg.payload.find(o => o.name == 'P3').value = 0;\n    msg.payload.find(o => o.name == 'Q3').value = 0;\n    msg.payload.find(o => o.name == 'A40_COS_L3').value = 0;\n    msg.payload.find(o => o.name == 'A40_TG_L3').value = 0;\n    isInvalid = true;\n}\n\nif(msg.payload.find(o => o.name == 'A40_COS_L1').value > 1) {\n    msg.payload.find(o => o.name == 'A40_COS_L1').value = 0;\n}\n\nif(msg.payload.find(o => o.name == 'A40_COS_L2').value > 1) {\n    msg.payload.find(o => o.name == 'A40_COS_L2').value = 0;\n}\n\nif(msg.payload.find(o => o.name == 'A40_COS_L3').value > 1) {\n    msg.payload.find(o => o.name == 'A40_COS_L3').value = 0;\n}\n\nif(msg.payload.find(o => o.name == 'A40_TG_L1').value > 1) {\n    msg.payload.find(o => o.name == 'A40_TG_L1').value = 0;\n}\n\nif(msg.payload.find(o => o.name == 'A40_TG_L2').value > 1) {\n    msg.payload.find(o => o.name == 'A40_TG_L2').value = 0;\n}\n\nif(msg.payload.find(o => o.name == 'A40_TG_L3').value > 1) {\n    msg.payload.find(o => o.name == 'A40_TG_L3').value = 0;\n}\n\nif(isInvalid)\n{\n    msg.payload.find(o => o.name == 'PT').value = msg.payload.find(o => o.name == 'P1').value + msg.payload.find(o => o.name == 'P2').value + msg.payload.find(o => o.name == 'P3').value; // PT = P1 + P2 + P3\n    msg.payload.find(o => o.name == 'QT').value = msg.payload.find(o => o.name == 'Q1').value + msg.payload.find(o => o.name == 'Q2').value + msg.payload.find(o => o.name == 'Q3').value; // QT = Q1 + Q2 + Q3\n}\n\nvalues.push('F_max:'+ msg.payload.find(o => o.name == 'F_max').value);\nvalues.push('U1_max:'+ msg.payload.find(o => o.name == 'U1_max').value);\nvalues.push('U2_max:'+ msg.payload.find(o => o.name == 'U2_max').value);\nvalues.push('U3_max:'+ msg.payload.find(o => o.name == 'U3_max').value);\nvalues.push('Un_max:'+ msg.payload.find(o => o.name == 'Un_max').value);\nvalues.push('V12_max:'+ msg.payload.find(o => o.name == 'V12_max').value);\nvalues.push('V23_max:'+ msg.payload.find(o => o.name == 'V23_max').value);\nvalues.push('V31_max:'+ msg.payload.find(o => o.name == 'V31_max').value);\nvalues.push('I1_max:'+ msg.payload.find(o => o.name == 'I1_max').value);\nvalues.push('I2_max:'+ msg.payload.find(o => o.name == 'I2_max').value);\nvalues.push('I3_max:'+ msg.payload.find(o => o.name == 'I3_max').value);\nvalues.push('In_max:'+ msg.payload.find(o => o.name == 'In_max').value);\nvalues.push('PT_max:'+ msg.payload.find(o => o.name == 'PT_max').value);\nvalues.push('QT_max:'+ msg.payload.find(o => o.name == 'QT_max').value);\nvalues.push('ST_max:'+ msg.payload.find(o => o.name == 'ST_max').value);\nvalues.push('P1_max:'+ msg.payload.find(o => o.name == 'P1_max').value);\nvalues.push('P2_max:'+ msg.payload.find(o => o.name == 'P2_max').value);\nvalues.push('P3_max:'+ msg.payload.find(o => o.name == 'P3_max').value);\nvalues.push('Q1_max:'+ msg.payload.find(o => o.name == 'Q1_max').value);\nvalues.push('Q2_max:'+ msg.payload.find(o => o.name == 'Q2_max').value);\nvalues.push('Q3_max:'+ msg.payload.find(o => o.name == 'Q3_max').value);\nvalues.push('S1_max:'+ msg.payload.find(o => o.name == 'S1_max').value);\nvalues.push('S2_max:'+ msg.payload.find(o => o.name == 'S2_max').value);\nvalues.push('S3_max:'+ msg.payload.find(o => o.name == 'S3_max').value);\n\nvalues.push('F_min:'+ msg.payload.find(o => o.name == 'F_min').value);\nvalues.push('U1_min:'+ msg.payload.find(o => o.name == 'U1_min').value);\nvalues.push('U2_min:'+ msg.payload.find(o => o.name == 'U2_min').value);\nvalues.push('U3_min:'+ msg.payload.find(o => o.name == 'U3_min').value);\nvalues.push('Un_min:'+ msg.payload.find(o => o.name == 'Un_min').value);\nvalues.push('V12_min:'+ msg.payload.find(o => o.name == 'V12_min').value);\nvalues.push('V23_min:'+ msg.payload.find(o => o.name == 'V23_min').value);\nvalues.push('V31_min:'+ msg.payload.find(o => o.name == 'V31_min').value);\nvalues.push('I1_min:'+ msg.payload.find(o => o.name == 'I1_min').value);\nvalues.push('I2_min:'+ msg.payload.find(o => o.name == 'I2_min').value);\nvalues.push('I3_min:'+ msg.payload.find(o => o.name == 'I3_min').value);\nvalues.push('In_min:'+ msg.payload.find(o => o.name == 'In_min').value);\nvalues.push('PT_min:'+ msg.payload.find(o => o.name == 'PT_min').value);\nvalues.push('QT_min:'+ msg.payload.find(o => o.name == 'QT_min').value);\nvalues.push('ST_min:'+ msg.payload.find(o => o.name == 'ST_min').value);\nvalues.push('P1_min:'+ msg.payload.find(o => o.name == 'P1_min').value);\nvalues.push('P2_min:'+ msg.payload.find(o => o.name == 'P2_min').value);\nvalues.push('P3_min:'+ msg.payload.find(o => o.name == 'P3_min').value);\nvalues.push('Q1_min:'+ msg.payload.find(o => o.name == 'Q1_min').value);\nvalues.push('Q2_min:'+ msg.payload.find(o => o.name == 'Q2_min').value);\nvalues.push('Q3_min:'+ msg.payload.find(o => o.name == 'Q3_min').value);\nvalues.push('S1_min:'+ msg.payload.find(o => o.name == 'S1_min').value);\nvalues.push('S2_min:'+ msg.payload.find(o => o.name == 'S2_min').value);\nvalues.push('S3_min:'+ msg.payload.find(o => o.name == 'S3_min').value);\n\nvalues.push('Inom:'+ msg.payload.find(o => o.name == 'Inom').value);\n\nvalues.push('U1:'+ msg.payload.find(o => o.name == 'U1').value);\nvalues.push('U2:'+ msg.payload.find(o => o.name == 'U2').value);\nvalues.push('U3:'+ msg.payload.find(o => o.name == 'U3').value);\nvalues.push('Un:'+ msg.payload.find(o => o.name == 'Un').value);\n\nvalues.push('V12:'+ msg.payload.find(o => o.name == 'V1').value);\nvalues.push('V23:'+ msg.payload.find(o => o.name == 'V2').value);\nvalues.push('V31:'+ msg.payload.find(o => o.name == 'V3').value);\n\nvalues.push('I1:'+ msg.payload.find(o => o.name == 'I1').value);\nvalues.push('I2:'+ msg.payload.find(o => o.name == 'I2').value);\nvalues.push('I3:'+ msg.payload.find(o => o.name == 'I3').value);\nvalues.push('In:'+ msg.payload.find(o => o.name == 'In').value);\nvalues.push('Inba:'+ msg.payload.find(o => o.name == 'Inba').value);\nvalues.push('Idir:'+ msg.payload.find(o => o.name == 'Idir').value);\nvalues.push('Iinv:'+ msg.payload.find(o => o.name == 'Iinv').value);\nvalues.push('Ihom:'+ msg.payload.find(o => o.name == 'Ihom').value);\nvalues.push('Inb:'+ msg.payload.find(o => o.name == 'Inb').value);\nvalues.push('PT:'+ msg.payload.find(o => o.name == 'PT').value);\nvalues.push('QT:'+ msg.payload.find(o => o.name == 'QT').value);\nvalues.push('ST:'+ msg.payload.find(o => o.name == 'ST').value);\nvalues.push('QT_lag:'+ msg.payload.find(o => o.name == 'QT_lag').value);\nvalues.push('QT_lead:'+ msg.payload.find(o => o.name == 'QT_lead').value);\nvalues.push('PF:'+ msg.payload.find(o => o.name == 'PF').value);\nvalues.push('P1:'+ msg.payload.find(o => o.name == 'P1').value);\nvalues.push('P2:'+ msg.payload.find(o => o.name == 'P2').value);\nvalues.push('P3:'+ msg.payload.find(o => o.name == 'P3').value);\nvalues.push('Q1:'+ msg.payload.find(o => o.name == 'Q1').value);\nvalues.push('Q2:'+ msg.payload.find(o => o.name == 'Q2').value);\nvalues.push('Q3:'+ msg.payload.find(o => o.name == 'Q3').value);\nvalues.push('S1:'+ msg.payload.find(o => o.name == 'S1').value);\nvalues.push('S2:'+ msg.payload.find(o => o.name == 'S2').value);\nvalues.push('S3:'+ msg.payload.find(o => o.name == 'S3').value);\n\nvalues.push('A40_COS_L1:'+ msg.payload.find(o => o.name == 'A40_COS_L1').value);\nvalues.push('A40_COS_L2:'+ msg.payload.find(o => o.name == 'A40_COS_L2').value);\nvalues.push('A40_COS_L3:'+ msg.payload.find(o => o.name == 'A40_COS_L3').value);\nvalues.push('A40_TG_L1:'+ msg.payload.find(o => o.name == 'A40_TG_L1').value);\nvalues.push('A40_TG_L2:'+ msg.payload.find(o => o.name == 'A40_TG_L2').value);\nvalues.push('A40_TG_L3:'+ msg.payload.find(o => o.name == 'A40_TG_L3').value);\nvalues.push('THD_U1:'+ msg.payload.find(o => o.name == 'THD_U1').value);\nvalues.push('THD_U2:'+ msg.payload.find(o => o.name == 'THD_U2').value);\nvalues.push('THD_U3:'+ msg.payload.find(o => o.name == 'THD_U3').value);\nvalues.push('THD_I1:'+ msg.payload.find(o => o.name == 'THD_I1').value);\nvalues.push('THD_I2:'+ msg.payload.find(o => o.name == 'THD_I2').value);\nvalues.push('THD_I3:'+ msg.payload.find(o => o.name == 'THD_I3').value);\nvalues.push('THD_In:'+ msg.payload.find(o => o.name == 'THD_In').value);\n\nvalues.push('Ea_PLUS:'+ msg.payload.find(o => o.name == 'Ea_PLUS').value);\n\nvalues.push('Er_lag_dec:'+ msg.payload.find(o => o.name == 'Er_lag_dec').value);\nvalues.push('Er_lag_res:'+ msg.payload.find(o => o.name == 'Er_lag_res').value);\nvalues.push('Er_lead_dec:'+ msg.payload.find(o => o.name == 'Er_lead_dec').value);\nvalues.push('Er_lead_res:'+ msg.payload.find(o => o.name == 'Er_lead_res').value);\n\nvalues.push('U_Har3_L1:'+ msg.payload.find(o => o.name == 'U_Har3_L1').value);\nvalues.push('U_Har3_L2:'+ msg.payload.find(o => o.name == 'U_Har3_L2').value);\nvalues.push('U_Har3_L3:'+ msg.payload.find(o => o.name == 'U_Har3_L3').value);\nvalues.push('U_Har5_L1:'+ msg.payload.find(o => o.name == 'U_Har5_L1').value);\nvalues.push('U_Har5_L2:'+ msg.payload.find(o => o.name == 'U_Har5_L2').value);\nvalues.push('U_Har5_L3:'+ msg.payload.find(o => o.name == 'U_Har5_L3').value);\nvalues.push('U_Har7_L1:'+ msg.payload.find(o => o.name == 'U_Har7_L1').value);\nvalues.push('U_Har7_L2:'+ msg.payload.find(o => o.name == 'U_Har7_L2').value);\nvalues.push('U_Har7_L3:'+ msg.payload.find(o => o.name == 'U_Har7_L3').value);\nvalues.push('U_Har9_L1:'+ msg.payload.find(o => o.name == 'U_Har9_L1').value);\nvalues.push('U_Har9_L2:'+ msg.payload.find(o => o.name == 'U_Har9_L2').value);\nvalues.push('U_Har9_L3:'+ msg.payload.find(o => o.name == 'U_Har9_L3').value);\nvalues.push('U_Har11_L1:'+ msg.payload.find(o => o.name == 'U_Har11_L1').value);\nvalues.push('U_Har11_L2:'+ msg.payload.find(o => o.name == 'U_Har11_L2').value);\nvalues.push('U_Har11_L3:'+ msg.payload.find(o => o.name == 'U_Har11_L3').value);\nvalues.push('U_Har13_L1:'+ msg.payload.find(o => o.name == 'U_Har13_L1').value);\nvalues.push('U_Har13_L2:'+ msg.payload.find(o => o.name == 'U_Har13_L2').value);\nvalues.push('U_Har13_L3:'+ msg.payload.find(o => o.name == 'U_Har13_L3').value);\nvalues.push('U_Har15_L1:'+ msg.payload.find(o => o.name == 'U_Har15_L1').value);\nvalues.push('U_Har15_L2:'+ msg.payload.find(o => o.name == 'U_Har15_L2').value);\nvalues.push('U_Har15_L3:'+ msg.payload.find(o => o.name == 'U_Har15_L3').value);\n\nvalues.push('I_Har3_L1:'+ msg.payload.find(o => o.name == 'I_Har3_L1').value);\nvalues.push('I_Har3_L2:'+ msg.payload.find(o => o.name == 'I_Har3_L2').value);\nvalues.push('I_Har3_L3:'+ msg.payload.find(o => o.name == 'I_Har3_L3').value);\nvalues.push('In_Har3:'+ msg.payload.find(o => o.name == 'In_Har3').value);\nvalues.push('I_Har5_L1:'+ msg.payload.find(o => o.name == 'I_Har5_L1').value);\nvalues.push('I_Har5_L2:'+ msg.payload.find(o => o.name == 'I_Har5_L2').value);\nvalues.push('I_Har5_L3:'+ msg.payload.find(o => o.name == 'I_Har5_L3').value);\nvalues.push('In_Har5:'+ msg.payload.find(o => o.name == 'In_Har5').value);\nvalues.push('I_Har7_L1:'+ msg.payload.find(o => o.name == 'I_Har7_L1').value);\nvalues.push('I_Har7_L2:'+ msg.payload.find(o => o.name == 'I_Har7_L2').value);\nvalues.push('I_Har7_L3:'+ msg.payload.find(o => o.name == 'I_Har7_L3').value);\nvalues.push('In_Har7:'+ msg.payload.find(o => o.name == 'In_Har7').value);\nvalues.push('I_Har9_L1:'+ msg.payload.find(o => o.name == 'I_Har9_L1').value);\nvalues.push('I_Har9_L2:'+ msg.payload.find(o => o.name == 'I_Har9_L2').value);\nvalues.push('I_Har9_L3:'+ msg.payload.find(o => o.name == 'I_Har9_L3').value);\nvalues.push('In_Har9:'+ msg.payload.find(o => o.name == 'In_Har9').value);\nvalues.push('I_Har11_L1:'+ msg.payload.find(o => o.name == 'I_Har11_L1').value);\nvalues.push('I_Har11_L2:'+ msg.payload.find(o => o.name == 'I_Har11_L2').value);\nvalues.push('I_Har11_L3:'+ msg.payload.find(o => o.name == 'I_Har11_L3').value);\nvalues.push('In_Har11:'+ msg.payload.find(o => o.name == 'In_Har11').value);\nvalues.push('I_Har13_L1:'+ msg.payload.find(o => o.name == 'I_Har13_L1').value);\nvalues.push('I_Har13_L2:'+ msg.payload.find(o => o.name == 'I_Har13_L2').value);\nvalues.push('I_Har13_L3:'+ msg.payload.find(o => o.name == 'I_Har13_L3').value);\nvalues.push('In_Har13:'+ msg.payload.find(o => o.name == 'In_Har13').value);\nvalues.push('I_Har15_L1:'+ msg.payload.find(o => o.name == 'I_Har15_L1').value);\nvalues.push('I_Har15_L2:'+ msg.payload.find(o => o.name == 'I_Har15_L2').value);\nvalues.push('I_Har15_L3:'+ msg.payload.find(o => o.name == 'I_Har15_L3').value);\nvalues.push('In_Har15:'+ msg.payload.find(o => o.name == 'In_Har15').value);\n\nvalues.push('F:'+ msg.payload.find(o => o.name == 'F').value);\nvalues.push('Unb:'+ msg.payload.find(o => o.name == 'Unb').value);\nvalues.push('Unba:'+ msg.payload.find(o => o.name == 'Unba').value);\nvalues.push('Vnb:'+ msg.payload.find(o => o.name == 'Vnb').value);\nvalues.push('Vnba:'+ msg.payload.find(o => o.name == 'Vnba').value);\nvalues = values.join('&');\n\nmsg.value = {Value: values, \n            EventTime: date.getYear()+'-'+date.getMonth()+'-'+date.getDay()+'T'+date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(),\n            EventTime: date.customFormat( \"#YYYY#-#MM#-#DD#T#hh#:#mm#:#ss#\" ),\n            Key: 'all_var',\n            Collection: 'alpha_emt_3r1'\n};\n\nif(timezoneGap >= 0) {\n    msg.value.EventTime = msg.value.EventTime + \"+0\" + timezoneGap + \":00\"\n}\nelse {\n    msg.value.EventTime = msg.value.EventTime + \"-0\" + timezoneGap + \":00\"\n}\n\nmsg.payload = msg.value;\nreturn msg;",
+		"outputs": 1,
+		"noerr": 0,
+		"initialize": "",
+		"finalize": "",
+		"libs": [],
+		"x": 1400,
+		"y": 1120,
+		"wires": [
+			[
+				"dbd70f4f.9bd4c",
+				"73100e4c.836d3"
+			]
+		]
+	},
+	{
+		"id": "73100e4c.836d3",
+		"type": "json",
+		"z": "5014230a.b411fc",
+		"name": "",
+		"property": "payload",
+		"action": "",
+		"pretty": false,
+		"x": 1590,
+		"y": 1120,
+		"wires": [
+			[]
+		]
+	},
+	{
+		"id": "dbd70f4f.9bd4c",
+		"type": "debug",
+		"z": "5014230a.b411fc",
+		"name": "createVarString",
+		"active": true,
+		"tosidebar": true,
+		"console": false,
+		"tostatus": false,
+		"complete": "payload",
+		"targetType": "msg",
+		"statusVal": "",
+		"statusType": "auto",
+		"x": 1620,
+		"y": 860,
+		"wires": []
+	},
+	{
+		"id": "6f0be603.8a1d88",
+		"type": "modbus-client",
+		"name": "EMT_3R1",
+		"clienttype": "tcp",
+		"bufferCommands": true,
+		"stateLogEnabled": false,
+		"queueLogEnabled": false,
+		"tcpHost": "192.168.1.12",
+		"tcpPort": "502",
+		"tcpType": "DEFAULT",
+		"serialPort": "/dev/ttyUSB",
+		"serialType": "RTU-BUFFERD",
+		"serialBaudrate": "9600",
+		"serialDatabits": "8",
+		"serialStopbits": "1",
+		"serialParity": "none",
+		"serialConnectionDelay": "100",
+		"unit_id": "1",
+		"commandDelay": "1",
+		"clientTimeout": "1000",
+		"reconnectOnTimeout": false,
+		"reconnectTimeout": "5000",
+		"parallelUnitIdsAllowed": false
+	}
+]
